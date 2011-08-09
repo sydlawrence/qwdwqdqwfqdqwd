@@ -111,8 +111,12 @@ function getPhotoUrls()
 {
     //return an array of urls pointing to any photos on the web
     //to search in for the trained $uids
-    return array(
-      "http://farm6.static.flickr.com/5256/5430291989_9e51c5418c.jpg",
-    );
+    include('images.php');
+    return $images;
+    
 }
+
+
+
+
 ?>
