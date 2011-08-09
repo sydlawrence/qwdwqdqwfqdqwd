@@ -41,12 +41,14 @@ class FaceRestClient
 	// ***********************
 	// Authentication Methods
 	// ***********************		
-	public function setFBUser($fbUser, $fbSession) 	
+	public function setFBUser($fbUser, $fbSession,$fbAccessToken) 	
 	{
 		$this->userAuth['fb_user'] = $fbUser;
 		$this->userAuth['fb_session'] = $fbSession;		
+		$this->userAuth['fb_oauth_token'] = $fbAccessToken;		
+
 	}
-	
+		
 	public function setTwitterUser($twitterUserName, $twitterPassword) 
 	{
 		$this->userAuth['twitter_username'] = $twitterUserName;

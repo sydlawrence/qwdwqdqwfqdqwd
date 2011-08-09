@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 $face_config = array(
   "key" => "33bc5c62f55d4c8ea5654c979e7dd55b",
@@ -7,63 +8,65 @@ $face_config = array(
 
 
 
-function namespaces() {
-  return array(
-    "sydlawrence@facebook.com",
-  );
-}
 
 
 
 
 //load the client PHP library
-require_once(__DIR__ . "/FaceRestClient.php");
+require_once("FaceRestClient.php");
+require_once("facebook.php");
+
+
+
 //initialize API object with API key and Secret
 $api = new FaceRestClient($face_config['key'], $face_config['secret']);
+
+
+$session_id = $_SESSION['fb_access_token'];
+$session_id = explode('|',$session_id);
+$session_id = $session_id[0];
+
+//2377433777
+
+// fb login
+$api->setFBUser($_SESSION['fb_user']->id,$session_id,$_SESSION['fb_access_token']);
+
+
+
 //the list of private-namespace UIDs to train and search for
 $uids = namespaces();
-//train the face.com index with the new uids (need to be called only once)
-foreach ($uids as $uid)
-    train($api, $uid);
+
+$threshold = 1;
+
+
 //search in untagged photos for these uids (can be called multiple times)
-search($api, $uids);
-/*
-    adds the passed uid to the face.com index
-*/
-function train(&$api, $uid)
-{
-    //obtain photos where this uid appears in (limit to 30)
-    $urls = getTrainingUrls($uid);
-    $urls = array_splice($urls, 0, 30);
-    //run face detection on all images
-    $tags = $api->faces_detect($urls);
-    if (empty($tags->photos))
-        return false;
-    //build a list of tag ids for training
-    $tids = array();
-    foreach ($tags->photos as $photo)
-    {
-        //skip errors
-        if (empty($photo->tags))
-            continue;
-        //skip photos with multiple faces (want to make sure only the uid appears)
-        if (count($photo->tags) > 1)
-            continue;
-        $tid = $photo->tags[0]->tid;
-        $tids[] = $tid;
-    }
-    //if faces were detected, save them for this uid
-    if (count($tids) > 0)
-        $api->tags_save($tids, $uid, $uid);
-    //train the index with the newly saved tags
-    $api->faces_train($uid);
-    //all done, recognition for $uid can now begin
-    return true;
+search($api, $uids,$threshold);
+
+
+
+
+function render_possible($uid,$url,$confidence) {
+    $id = str_replace('@facebook.com','',$uid);
+    $fb_data = file_get_contents('https://graph.facebook.com/'.$id."?access_token=".$_SESSION['fb_access_token']);
+    $fb_data = json_decode($fb_data);
+    $name = $fb_data->name;
+    
+    
+    echo "<p>$name was <b>found</b> in url $url ($confidence % confidence)</p>";
+    
+    echo "<img src='http://graph.facebook.com/".$id."/picture'/> = <img src='".$url."'/>";
+    
+    
+    
+
 }
+
+
+
 /*
     searches for uids within photos
 */
-function search(&$api, $uids)
+function search(&$api, $uids,$threshold)
 {
     //obtain list of photos to search in
     $photoUrls = getPhotoUrls();
@@ -77,7 +80,6 @@ function search(&$api, $uids)
         if (($count % 30) == 0 || $count == count($photoUrls))
         {
             $response = $api->faces_recognize($urls, $uids);
-            print_r($response);
             foreach ($response->photos as $photo)
             {
                 //skip empty tags and errors
@@ -93,8 +95,8 @@ function search(&$api, $uids)
                         $uid = $tag->uids[0]->uid;
                         $conf = $tag->uids[0]->confidence;
                         //only print if confidence is higher than recommended threshold
-                        if ($conf >= $tag->threshold)
-                            echo "$uid was found in url $url ($conf % confidence)n";
+                        if ($conf >= $threshold)
+                          render_possible($uid,$url,$conf);
                     }
                 }
             }
@@ -102,11 +104,7 @@ function search(&$api, $uids)
         }
     }
 }
-function getTrainingUrls($uid)
-{
-    //return an array of urls pointing to known photos of the uid
-    return array();
-}
+
 function getPhotoUrls()
 {
     //return an array of urls pointing to any photos on the web
@@ -115,6 +113,14 @@ function getPhotoUrls()
     return $images;
     
 }
+
+function namespaces() {
+  return array(
+    "friends@facebook.com",
+    $_SESSION['fb_user']->id."@facebook.com"
+  );
+}
+
 
 
 
