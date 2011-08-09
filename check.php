@@ -36,7 +36,7 @@ $api->setFBUser($_SESSION['fb_user']->id,$session_id,$_SESSION['fb_access_token'
 //the list of private-namespace UIDs to train and search for
 $uids = namespaces();
 
-$threshold = 1;
+$threshold = 70;
 
 
 //search in untagged photos for these uids (can be called multiple times)
