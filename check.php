@@ -54,7 +54,7 @@ function render_possible($uid,$url,$confidence) {
     
     echo "<p>$name was <b>found</b> in url $url ($confidence % confidence)</p>";
     
-    echo "<img src='http://graph.facebook.com/".$id."/picture'/> = <img src='".$url."'/>";
+    echo "<img src='http://graph.facebook.com/".$id."/picture?type=large'> = <img src='".$url."'/>";
     
     
     
@@ -80,23 +80,29 @@ function search(&$api, $uids,$threshold)
         if (($count % 30) == 0 || $count == count($photoUrls))
         {
             $response = $api->faces_recognize($urls, $uids);
+            
+           // echo "<pre>".print_r($response,true)."</pre>";
+            
             foreach ($response->photos as $photo)
             {
                 //skip empty tags and errors
-                if (empty($photo->tags))
-                    continue;
+               // if (empty($photo->tags))
+                 //   continue;
                 $url = $photo->url;
                 //echo all found tags
                 foreach ($photo->tags as $tag)
                 {
+                    
                     if (!empty($tag->uids))
                     {
                         //only interested in highest score for this tag
-                        $uid = $tag->uids[0]->uid;
-                        $conf = $tag->uids[0]->confidence;
-                        //only print if confidence is higher than recommended threshold
-                        if ($conf >= $threshold)
-                          render_possible($uid,$url,$conf);
+                        foreach ($tag->uids as $ui) {
+                          $uid = $ui->uid;
+                          $conf = $ui->confidence;
+                          //only print if confidence is higher than recommended threshold
+                          if ($conf >= $threshold)
+                            render_possible($uid,$url,$conf);
+                        }
                     }
                 }
             }
