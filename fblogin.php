@@ -8,17 +8,18 @@ $fb = new Facebook();
 
 
 
-if ($token = $fb->getAccessToken()) {
-
-  $user = $fb->getUser();
+if (isset($_GET['code'])) {
+  $token = $fb->getAccessToken();
+  $user = $fb->getUser();  
   
-  print_r($user);  
+  echo "<pre>User: ".print_r($user,true)."</pre>";
   
   
-  
-  echo "<pre>".print_r($token,true)."</pre>";
+  echo "<pre>Token: ".print_r($token,true)."</pre>";
 }
 else {
-  header('Location = "'.$fb->getLoginUrl().'"');
+
+
+  header('Location: '.$fb->getLoginUrl());
 }
 
