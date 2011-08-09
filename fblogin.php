@@ -11,7 +11,15 @@ if (isset($_GET['code'])) {
 
   $data = json_decode(file_get_contents($url));  
   
-  echo "<pre>User: ".print_r($data,true)."</pre>";
+//  echo "<pre>User: ".print_r($data,true)."</pre>";
+//  echo "<pre>Access Token: ".print_r($token,true)."</pre>";
+
+
+  $_SESSION['fb_user'] = $data;
+  $_SESSION['fb_access_token'] = $token;
+  
+  
+  header('Location: check.php');
 }
 else {
 
